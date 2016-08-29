@@ -1,133 +1,104 @@
-var cubeSides = {
-  0: [4, 2, 5, 3],
-  1: [4, 3, 5, 2],
-  2: [4, 1, 5, 0],
-  3: [4, 0, 5, 1],
-  4: [1, 2, 0, 3],
-  5: [0, 2, 1, 3]
-};
-
-var faces = {
-  0: 'front',
-  1: 'back',
-  2: 'right',
-  3: 'left',
-  4: 'top',
-  5: 'bottom'
-};
-
 var App = function() {
+  this.cubeWrapper = document.querySelector('.cube-wrapper');
   this.cube = document.querySelector('.cube');
-  this.borders = document.querySelectorAll('.border');
-  this.currentFace = 0;
-  this.startTime = null;
-  this.selected = null;
+  this.rotationBtns = document.querySelectorAll('.rotator');
 
-  this.borders.forEach(function(border, i) {
-    this.handleClick(border, i);
-  }.bind(this))
+  this.rotationDelay = 300;
+  this.zoomInDelay = 800
+
+  this.xRot = 0;
+  this.yRot = 0;
+  this.rotation = '';
+
+  this.numClicked = 0;
+
+  this.init();
 };
 
 App.prototype.constructor = App;
 
-App.prototype.handleClick = function(border, i) {
-  border.addEventListener('click', function(e) {
-    // this.startTime = Math.floor(Date.now() / 1000);
-// debugger
-    // this.selected = i;
+App.prototype.init = function() {
+  this.rotationBtns.forEach(function(btn, i) {
+    this.handleClick(btn, i);
+  }.bind(this));
+
+  this.zoomIn();
+};
+
+App.prototype.handleClick = function(btn, i) {
+  btn.addEventListener('click', function(e) {
+    this.numClicked++;
     this.turnToFace(i);
-
-    // window.requestAnimationFrame(step);
-
-    // window.requestAnimationFrame(this.turnToFace.bind(this));
-
-
-    // this.timer();
-    // console.log("time", Date.now())
-    // window.requestAnimationFrame(this.timer.bind(this));
   }.bind(this));
 };
 
 App.prototype.turnToFace = function(i) {
-  // debugger
-  var oldFace = faces[this.currentFace];
-  // this.currentFace = cubeSides[this.currentFace][i];
-  this.currentFace = cubeSides[this.currentFace][i];
-
-  // var oldFaceName = faces[oldFace];
-  var newFace = faces[this.currentFace];
-
-  if(oldFace === 'front' && newFace === 'left') {
-    newFace = 'left-from-back';
-  }
-
-  this.cube.classList.remove('show-' + oldFace);
-  this.cube.classList.add('show-' + newFace);
-
+  this.zoomOut();
 
   setTimeout(function() {
-    if(newFace === 'left-from-back') {
-      this.cube.classList.remove('show-' + newFace);
-      this.cube.classList.add('show-left');
+    this.numClicked--;
+    this.rotateCube(i);
+  }.bind(this), this.rotationDelay);
+
+  setTimeout(function() {
+    if(this.numClicked === 0) {
+      this.zoomIn();
     }
-  }.bind(this), 1000);
+  }.bind(this), this.zoomInDelay);
+}
 
-  // console.log("timestamp", Math.floor(timestamp/1000))
+App.prototype.rotateCube = function(i) {
+  // up
+  if(i === 0) {
+    this.xRot += 90;
+    this.rotation = 'rotateX(' + this.xRot + 'deg)';
+    this.yRot = 0;
+  }
+  // right
+  else if(i === 1) {
+    this.yRot += 90;
+    this.rotation = 'rotateY(' + this.yRot + 'deg)';
+    this.xRot = 0;
+  }
+  // down
+  else if(i === 2) {
+    this.xRot -= 90;
+    this.rotation = 'rotateX(' + this.xRot + 'deg)';
+    this.yRot = 0;
+  }
+  // left
+  else if(i === 3) {
+    this.yRot -= 90;
+    this.rotation = 'rotateY(' + this.yRot + 'deg)';
+    this.xRot = 0;
+  }
 
+  if(this.normalize(this.xRot) === 180) {
+    this.rotation = 'rotateY(180deg)';
+    this.yRot = 180;
+    this.xRot = 0;
+  }
 
-
-  // var seconds = Math.floor(Date.now() / 1000);
-
-  // window.requestAnimationFrame(step);
-
+  this.cube.style.transform = this.rotation;
 };
 
-// App.prototype.timer = function(timestamp) {
+App.prototype.zoomIn = function() {
+  this.cubeWrapper.style.transform = 'translateZ(270px)';
+};
 
-//   var currentTime = Math.floor(timestamp/1000);
+App.prototype.zoomOut = function() {
+  this.cubeWrapper.style.transform = '';
+};
 
-//   var currentTime = timestamp;
+App.prototype.normalize = function(value) {
+  var normalizedValue = value;
 
-//   // var currentTime = Math.floor(Date.now() / 1000);
-//   var currentTime = Date.now();
+  while(normalizedValue < 0) {
+    normalizedValue += 360;
+  }
+  normalizedValue %= 360;
 
-//   // console.log("currentTime", timestamp)
-
-//   if(!this.startTime) {
-//     this.startTime = currentTime;
-//     // window.requestAnimationFrame(this.timer.bind(this));
-//     this.timer();
-//   }
-//   else if(currentTime - this.startTime < 1000) {
-//     // console.log("diff", currentTime - this.startTime)
-//     // console.log("ratio", (currentTime - this.startTime) / 1000)
-
-//     var ratio = (currentTime - this.startTime) / 1000;
-//     var angle = 180 * ratio;
-
-//     this.cube.style.transform = 'rotateX(' + 90 + 'deg)';
-
-//     console.log("angle", 180 * ratio, this.cube.style.transform)
-
-
-//     // window.requestAnimationFrame(this.timer.bind(this));
-//     // this.timer();
-//   }
-//   else {
-//     this.startTime = null;
-//     console.log("done")
-//   }
-// };
-
-// var step = function(timestamp) {
-//   console.log("timestamp", timestamp)
-// }
-
-// App.prototype.setBorderLinks = function() {
-//   cubeSides[this.currentFace].forEach(function(side) {
-//     console.log("side", side)
-
-//   })
-// }
+  return normalizedValue;
+}
 
 new App();
